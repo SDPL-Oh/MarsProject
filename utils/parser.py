@@ -305,41 +305,33 @@ def parse_blocks(text):
     return results
 
 
-def parse_output_file(path):
-    with open(path, 'r', encoding='utf-8') as f:
+def update_stiff_scant_in_ma2(input_ma2: str, output_ma2: str, new_df: pd.DataFrame):
+    with open(input_ma2, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
 
-    kv_pattern = re.compile(r'([A-Za-z0-9/ ,\.]+):\s+([-0-9.E\s]+)')
-    kv_matches = kv_pattern.findall(text)
+    pattern = r"(------------------ STIFF SCANT\s+------------------)(.*?)(?=------------------|\Z)"
+    match = re.search(pattern, text, flags=re.S)
 
-    rows = []
-    for k, v in kv_matches:
-        nums = re.findall(r'-?\d+\.\d+(?:E[+-]?\d+)?', v)
-        rows.append([k.strip()] + nums)
+    if not match:
+        raise ValueError("STIFF SCANT section not found in file")
 
-    max_len = max(len(r) for r in rows)
-    columns = ["Key"] + [f"Value{i}" for i in range(1, max_len)]
-    df_global = pd.DataFrame(rows, columns=columns)
+    header_line = "* " + "\t".join(new_df.columns)
+    body_lines = []
 
-    panel_pattern = re.compile(r'(Panel:\s+\d+\s+Strake:\s+\d+)(.*?)(?=Panel:|\Z)', re.S)
-    panel_rows = []
-    for block in panel_pattern.findall(text):
-        header, body = block
-        panel_num = re.search(r'Panel:\s+(\d+)', header).group(1)
-        strake_num = re.search(r'Strake:\s+(\d+)', header).group(1)
+    for _, row in new_df.iterrows():
+        values = [ str(v) if v is not None else "" for v in row.values]
+        body_lines.append(" \t ".join(values))
+    body_lines.append("*\n")
 
-        for line in body.splitlines():
-            parts = line.strip().split()
-            if len(parts) >= 2:
-                key = parts[0].replace(":", "")
-                actual = parts[1]
-                rule = parts[2] if len(parts) > 2 else None
-                case = parts[3] if len(parts) > 3 else None
-                panel_rows.append([panel_num, strake_num, key, actual, rule, case])
+    new_section = match.group(1) + "\n" + header_line + "\n" + "\n".join(body_lines)
 
-    df_panel = pd.DataFrame(panel_rows, columns=["Panel", "Strake", "Item", "Actual", "Rule", "Case"])
+    new_text = text[:match.start()] + new_section + text[match.end():]
 
-    return df_global, df_panel
+    with open(output_ma2, "w", encoding="utf-8") as f:
+        f.write(new_text)
+
+    print(f"[INFO] Updated STIFF SCANT section written to {output_ma2}")
+
 
 
 if __name__ == "__main__":
@@ -355,9 +347,15 @@ if __name__ == "__main__":
     # print(parsed["nodes"].head())
     # print("=== strakes ===")
     # print(parsed["strakes"].head())
-    # print("=== stiff scant ===")
-    # print(parsed["stiff scant"].head())
-    print(parsed["stiffener_groups"].head(15))
+    print("=== stiff scant ===")
+    print(parsed["stiff scant"])
+
+    df = parsed["stiff scant"]
+    df.loc[0, "hweb"] = 600
+
+    update_stiff_scant_in_ma2("../data/sample.ma2", "../data/change.ma2", df)
+
+    # print(parsed["stiffener_groups"].head(15))
 
     # with open("../data/sample.txt", "r", encoding="utf-8") as f:
     #     text = f.read()
