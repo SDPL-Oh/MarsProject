@@ -335,7 +335,7 @@ SLSTRNO62                               	 100 	 5 	 1 	 2 	 1 	 14 	 1 	 0 	 0 	
 *
 ------------------ STIFF SCANT  ------------------
 * Ipan	Type	hweb	tweb	hflan	tflan	Mater.	Igrp	Beff	SpanR	Bracket	BrLen	BrType	hweb	tweb	hflan	tflan	WebYoungMod	FlYoungMod	GlobalId
- 1 	 4 	 600 	 15.5 	 200 	 29.5 	 0 	 1 	-1 	 0.3 	 0 	 0 	 0 	
+ 1 	 4 	 675 	 15.5 	 200 	 29.5 	 0 	 1 	-1 	 0.3 	 0 	 0 	 0  
  1 	 4 	 675 	 15.5 	 200 	 29.5 	 0 	 1 	-1 	 0.3 	 0 	 0 	 0 	
  1 	 4 	 675 	 15.5 	 200 	 29.5 	 0 	 1 	-1 	 0.3 	 0 	 0 	 0 	
  1 	 4 	 675 	 15.5 	 200 	 29.5 	 0 	 1 	-1 	 0.3 	 0 	 0 	 0 	

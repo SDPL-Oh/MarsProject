@@ -231,80 +231,6 @@ def parse_ma2(file_path: str) -> dict:
     return parsed
 
 
-def parse_panel_strake_blocks(text):
-    panel_pattern = re.compile(r'(Panel:\s+\d+\s+Strake:\s+\d+)(.*?)(?=Panel:|\Z)', re.S)
-    panel_rows = []
-
-    for block in panel_pattern.findall(text):
-        header, body = block
-        panel_num = re.search(r'Panel:\s+(\d+)', header).group(1)
-        strake_num = re.search(r'Strake:\s+(\d+)', header).group(1)
-
-        for line in body.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-
-            # "문자열: 값들" 패턴 분리
-            match = re.match(r"(.+?:)\s+(-?\d+\.\d+(?:E[+-]?\d+)?)(?:\s+(-?\d+\.\d+(?:E[+-]?\d+)?))?(?:\s+(\w+))?", line)
-            if match:
-                item = match.group(1).strip()
-                actual = match.group(2)
-                rule = match.group(3)
-                case = match.group(4)
-                panel_rows.append([panel_num, strake_num, item, actual, rule, case])
-
-    return pd.DataFrame(panel_rows, columns=["Panel", "Strake", "Item", "Actual", "Rule", "Case"])
-
-
-def parse_blocks(text):
-    results = {}
-
-    panel_pattern = re.compile(r'(Panel:\s+\d+\s+Strake:\s+\d+)(.*?)(?=Panel:|\Z)', re.S)
-    panel_rows = []
-    for header, body in panel_pattern.findall(text):
-        panel_num = re.search(r'Panel:\s+(\d+)', header).group(1)
-        strake_num = re.search(r'Strake:\s+(\d+)', header).group(1)
-
-        for line in body.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-
-            match = re.match(r"(.+?:)\s+(-?\d+\.\d+(?:E[+-]?\d+)?)(?:\s+(-?\d+\.\d+(?:E[+-]?\d+)?))?(?:\s+(\w+))?", line)
-            if match:
-                item = match.group(1).strip()
-                actual = match.group(2)
-                rule = match.group(3)
-                case = match.group(4)
-                panel_rows.append([panel_num, strake_num, item, actual, rule, case])
-
-    results["panel_strake"] = pd.DataFrame(panel_rows, columns=["Panel", "Strake", "Item", "Actual", "Rule", "Case"])
-
-    stiff_pattern = re.compile(r'(Panel:\s+\d+\s+Stiffener:\s+\d+)(.*?)(?=Panel:|\Z)', re.S)
-    stiff_rows = []
-    for header, body in stiff_pattern.findall(text):
-        panel_num = re.search(r'Panel:\s+(\d+)', header).group(1)
-        stiff_num = re.search(r'Stiffener:\s+(\d+)', header).group(1)
-
-        for line in body.splitlines():
-            line = line.strip()
-            if not line:
-                continue
-
-            match = re.match(r"(.+?:)\s+(-?\d+\.\d+(?:E[+-]?\d+)?)(?:\s+(-?\d+\.\d+(?:E[+-]?\d+)?))?(?:\s+(\w+))?", line)
-            if match:
-                item = match.group(1).strip()
-                actual = match.group(2)
-                rule = match.group(3)
-                case = match.group(4)
-                stiff_rows.append([panel_num, stiff_num, item, actual, rule, case])
-
-    results["panel_stiffener"] = pd.DataFrame(stiff_rows, columns=["Panel", "Stiffener", "Item", "Actual", "Rule", "Case"])
-
-    return results
-
-
 def update_stiff_scant_in_ma2(input_ma2: str, output_ma2: str, new_df: pd.DataFrame):
     with open(input_ma2, "r", encoding="utf-8", errors="ignore") as f:
         text = f.read()
@@ -319,8 +245,10 @@ def update_stiff_scant_in_ma2(input_ma2: str, output_ma2: str, new_df: pd.DataFr
     body_lines = []
 
     for _, row in new_df.iterrows():
-        values = [ str(v) if v is not None else "" for v in row.values]
-        body_lines.append(" \t ".join(values))
+        values = [str(v) for v in row.values if v not in [None, ""]]
+        formatted = " " + " \t ".join(values) + "  "
+        formatted = formatted.replace(" -", "-")
+        body_lines.append(formatted)
     body_lines.append("*\n")
 
     new_section = match.group(1) + "\n" + header_line + "\n" + "\n".join(body_lines)
@@ -341,8 +269,8 @@ if __name__ == "__main__":
     # print(parsed["version"])
     # print("=== BSD ===")
     # print(parsed["bsd"])
-    # print("=== PANELS ===")
-    # print(parsed["panels"].head())
+    print("=== stiff loc ===")
+    print(parsed["stiff loc"])
     # print("=== NODES ===")
     # print(parsed["nodes"].head())
     # print("=== strakes ===")
@@ -350,10 +278,10 @@ if __name__ == "__main__":
     print("=== stiff scant ===")
     print(parsed["stiff scant"])
 
-    df = parsed["stiff scant"]
-    df.loc[0, "hweb"] = 600
-
-    update_stiff_scant_in_ma2("../data/sample.ma2", "../data/change.ma2", df)
+    # df = parsed["stiff scant"]
+    # df.iat[0, 2] = 600
+    #
+    # update_stiff_scant_in_ma2("../data/sample.ma2", "../data/change.ma2", df)
 
     # print(parsed["stiffener_groups"].head(15))
 

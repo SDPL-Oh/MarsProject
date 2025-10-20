@@ -5,6 +5,7 @@ import random
 import numpy as np
 from collections import deque
 
+
 class DQNAgent(nn.Module):
     def __init__(self, state_dim, action_dim):
         super().__init__()
@@ -90,10 +91,8 @@ def train_agent(env, episodes=500, gamma=0.99, lr=1e-3,
             if done:
                 break
 
-        # epsilon 감소
         epsilon = max(epsilon_end, epsilon * epsilon_decay)
 
-        # target 네트워크 업데이트
         if ep % 10 == 0:
             target_net.load_state_dict(policy_net.state_dict())
 
