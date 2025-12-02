@@ -245,7 +245,7 @@ def update_stiff_scant_in_ma2(input_ma2: str, output_ma2: str, new_df: pd.DataFr
     body_lines = []
 
     for _, row in new_df.iterrows():
-        values = [str(v) for v in row.values if v not in [None, ""]]
+        values = [str(v) for v in row.values if v not in ["nan", None, ""]]
         formatted = " " + " \t ".join(values) + "  "
         formatted = formatted.replace(" -", "-")
         body_lines.append(formatted)
@@ -257,9 +257,6 @@ def update_stiff_scant_in_ma2(input_ma2: str, output_ma2: str, new_df: pd.DataFr
 
     with open(output_ma2, "w", encoding="utf-8") as f:
         f.write(new_text)
-
-    print(f"[INFO] Updated STIFF SCANT section written to {output_ma2}")
-
 
 
 if __name__ == "__main__":

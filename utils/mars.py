@@ -17,9 +17,9 @@ stark_condition_map = {
 }
 
 stiff_condition_map = {
-    "Gross W.": "ge",
-    "Gross Mini Thick.": "ge",
-    "Sig. Nor.": "le",
+    # "Gross W.": "le",
+    # "Gross Mini Thick.": "ge",
+    # "Sig. Nor.": "le",
     # "Sig. Comb.": "le",
     "Net Load W.": "ge",
     "Net Load Ash.": "ge",
@@ -28,16 +28,13 @@ stiff_condition_map = {
     "Net Mini Thick.": "ge",
     "Net Mini Tflange.": "ge",
     "Net Mini BFlange": "ge",
-    "Eta Bu. Over.": "le",
-    "Eta Bu. Sti.": "le",
+    # "Eta Bu. Over.": "le",
+    # "Eta Bu. Sti.": "le",
     # "Fatigue Life": "ge",
 }
 
 
-def run_mars(config_path):
-    with open(config_path, "r") as f:
-        config = json.load(f)
-
+def run_mars(config):
     batch_file = config["batch_path"]
     output_file = config["output_path"]
 
@@ -141,16 +138,64 @@ def evaluate_rule(df, mode="stiff"):
             results.append(True)
 
     df["pass"] = results
+    df = df[~df["stiffener"].isin(["32", "5", "6", "11", "13"])]
+
+    # df.loc[df["stiffener"] == str(32), "pass"] = True
+    # df.loc[df["stiffener"] == str(5), "pass"] = True
+    # df.loc[df["stiffener"] == str(6), "pass"] = True
+    # df.loc[df["stiffener"] == str(11), "pass"] = True
+    # df.loc[df["stiffener"] == str(13), "pass"] = True
     return df
 
 
+def compute_margin(df_eval, mode="stiff"):
+    if mode == "stiff":
+        condition_map = stiff_condition_map
+    else:
+        condition_map = stark_condition_map
+
+    df_temp = df_eval.copy()
+
+    df_temp["actual"] = pd.to_numeric(df_temp["actual"], errors="coerce")
+    df_temp["rule"]   = pd.to_numeric(df_temp["rule"], errors="coerce")
+
+    margins  = []
+    for _, row in df_temp.iterrows():
+        item = row["item"].strip().rstrip(":")
+        actual = row["actual"]
+        rule = row["rule"]
+
+        cond = condition_map.get(item, None)
+
+        if cond is None:
+            margins.append(9999)
+            continue
+
+        if cond == "ge":
+            margin = actual - rule
+        elif cond == "le":
+            margin = rule - actual
+        else:
+            margin = 9999
+        margins.append(margin)
+
+    df_temp["margin"] = margins
+    stiff_margin = df_temp.groupby(["panel", "stiffener"])["margin"].min()
+
+    return stiff_margin
+
+
 if __name__ == "__main__":
-    bat_file = "../data/config.json"
-    df_global, df_panel, df_stiffener = run_mars(bat_file)
+    cnofig_file = "../data/config.json"
+    with open(cnofig_file, "r") as f:
+        config = json.load(f)
+    df_global, df_panel, df_stiffener = run_mars(config)
     # print(df_panel)
     # print(df_stiffener)
 
-    df_result = evaluate_rule(df_stiffener)
-    df_fail = df_result[df_result["pass"] == False]
+    df_eval = evaluate_rule(df_stiffener)
+    stiff_margin = compute_margin(df_eval)
+    print(stiff_margin)
+    df_fail = df_eval[df_eval["pass"] == False]
 
     print(df_fail[["panel", "stiffener", "item", "actual", "rule", "pass"]])

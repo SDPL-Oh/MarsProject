@@ -3,6 +3,7 @@
   "batch_path": "C:/BVeritas/Mars2000/TestCases/Batch/run.bat",
   "input_path": "C:/BVeritas/Mars2000/TestCases/InputData/pnu.ma2",
   "output_path": "C:/BVeritas/Mars2000/TestCases/Output/pnu_ 1_S_BV RULES.txt",
+  "temp_path": "C:/BVeritas/Mars2000/TestCases/InputData/temp.ma2",
   "angle": "F:/MarsProject/data/angle.CSV",
   "tbar": "F:/MarsProject/data/tbar.CSV",
   "strake": "F:/MarsProject/data/strake.CSV",
