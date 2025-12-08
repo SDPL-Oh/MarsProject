@@ -107,7 +107,7 @@ class ScantlingOptEnv(gym.Env):
         margin = compute_margin(df_eval_new)
         reward, terminated = self._compute_reward(margin, target_group)
         df_fail = df_eval_new[df_eval_new["pass"] == False]
-        print(f'[step {self.current_step}], reward: {round(reward, 2)}, modify group: {target_group}, fail: {df_fail.shape[0]}, {selected_spec}')
+        print(f'[step {self.current_step}], reward: {round(reward, 2)}, modify group: {target_group}, fail: {df_fail.shape[0]}')
 
         truncated = self.current_step >= self.max_steps
         obs = self._get_observation(margin)
