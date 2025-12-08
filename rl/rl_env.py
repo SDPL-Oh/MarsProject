@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-from tqdm import tqdm
 
 from utils.parser import parse_ma2, update_stiff_scant_in_ma2
 from utils.mars import run_mars, evaluate_rule, compute_margin
